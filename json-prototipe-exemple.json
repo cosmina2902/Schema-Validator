@@ -1,0 +1,17 @@
+{
+	"job" :{
+		"title": "Software developer",
+		"description": "Perform design, implementation, and maintenance of microservice applications",
+		"meal tickets": 28,
+		"remote_job": false,
+		"attributions": ["create unit test", "tehnical suport", "prepare releases"]
+	},
+	"candidate_requirements" :{
+		"langueage": "english",
+		"bachelor's degree": "Information Technology",
+		"technologies": ["Spring/Spring Boot", "Jpa/Hibernate", "Swagger", "Gradle"],
+		"Knowledge Continuous integration": true,
+		"Knowledge of Web technologies": true,
+		"Operating systems": ["Linux", "Windows"]
+	}
+}
