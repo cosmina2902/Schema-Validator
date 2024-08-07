@@ -11,16 +11,17 @@ import lombok.AllArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import schema_validator.recea.cosmina.schema_validator.entity.Schemas;
+import schema_validator.recea.cosmina.schema_validator.entity.Users;
+import schema_validator.recea.cosmina.schema_validator.service.UserAndSchemaService;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,24 +30,42 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ValidatorClassController {
 
-    @PostMapping("/validator")
-    public ResponseEntity<String> createValidation(@RequestBody String request) {
+    private UserAndSchemaService userAndSchemaService;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @PostMapping("/{username}/{schemaName}")
+    public ResponseEntity<String> createValidation(@PathVariable String username, @PathVariable String schemaName, @RequestBody String request) {
         try {
-            InputStream schemaStream = Files.newInputStream(Paths.get("json-Jobschema.json"));
-            JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(schemaStream);
+            Optional<Users> userOpt = userAndSchemaService.getUserByUsername(username);
+            if (userOpt.isPresent()) {
+                Users user = userOpt.get();
+                Optional<Schemas> schemaOpt = userAndSchemaService.getSchemasForUser(username).stream()
+                        .filter(schema -> schema.getSchemaName().equals(schemaName))
+                        .findFirst();
 
-            ObjectMapper om = new ObjectMapper();
-            JsonNode jsonNode = om.readTree(request);
-            Set<ValidationMessage> errors = schema.validate(jsonNode);
+                if (schemaOpt.isPresent()) {
+                    Schemas schemaEntity = schemaOpt.get();
+                    JsonNode schemaNode = objectMapper.readTree(schemaEntity.getSchemaBody());
+                    JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(schemaNode);
 
-            if (!errors.isEmpty()) {
-                String errorsCombined = errors.stream()
-                        .map(ValidationMessage::getMessage)
-                        .collect(Collectors.joining("\n"));
-                return ResponseEntity.badRequest().body("Please fix your JSON! \n" + errorsCombined);
+                    JsonNode jsonNode = objectMapper.readTree(request);
+                    Set<ValidationMessage> errors = schema.validate(jsonNode);
+
+                    if (!errors.isEmpty()) {
+                        String errorsCombined = errors.stream()
+                                .map(ValidationMessage::getMessage)
+                                .collect(Collectors.joining("\n"));
+                        return ResponseEntity.badRequest().body("Please fix your JSON! \n" + errorsCombined);
+                    }
+
+                    return ResponseEntity.ok("JSON is valid against the schema.");
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Schema not found.");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
             }
-
-            return ResponseEntity.ok("JSON is valid against the schema.");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading the schema or JSON: " + e.getMessage());
         }
