@@ -11,16 +11,15 @@ import lombok.AllArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import schema_validator.recea.cosmina.schema_validator.entity.Schemas;
 import schema_validator.recea.cosmina.schema_validator.entity.Users;
 import schema_validator.recea.cosmina.schema_validator.service.UserAndSchemaService;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,9 +33,10 @@ public class ValidatorClassController {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    @PostMapping("/{username}/{schemaName}")
-    public ResponseEntity<String> createValidation(@PathVariable String username, @PathVariable String schemaName, @RequestBody String request) {
+    @PostMapping("/{schemaName}")
+    public ResponseEntity<String> createValidation(@PathVariable String schemaName, @RequestBody String request) {
         try {
+            String username = getLoggedinUsername();
             Optional<Users> userOpt = userAndSchemaService.getUserByUsername(username);
             if (userOpt.isPresent()) {
                 Users user = userOpt.get();
@@ -61,7 +61,7 @@ public class ValidatorClassController {
 
                     return ResponseEntity.ok("JSON is valid against the schema.");
                 } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Schema not found.");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Schema not found for this user.");
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
@@ -69,5 +69,10 @@ public class ValidatorClassController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading the schema or JSON: " + e.getMessage());
         }
+    }
+    private String getLoggedinUsername() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
     }
 }
