@@ -1,19 +1,19 @@
 package schema_validator.recea.cosmina.schema_validator.service;
 
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import schema_validator.recea.cosmina.schema_validator.entity.Schemas;
 import schema_validator.recea.cosmina.schema_validator.entity.Users;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,13 +27,26 @@ public class UserAndSchemaService {
         loadData();
     }
 
+//    private void loadData() {
+//        try {
+//            File file = new File(FILE_PATH);
+//            if (file.exists() && file.length() > 0) {
+//                JsonData jsonData = objectMapper.readValue(file, JsonData.class);
+//                this.users = jsonData.getUsers();
+//                this.schemas = jsonData.getSchemas();
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException("Could not read data file", e);
+//        }
+//    }
     private void loadData() {
-        try {
-            File file = new File(FILE_PATH);
-            if (file.exists() && file.length() > 0) {
-                JsonData jsonData = objectMapper.readValue(file, JsonData.class);
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(FILE_PATH)) {
+            if (inputStream != null) {
+                JsonData jsonData = objectMapper.readValue(inputStream, JsonData.class);
                 this.users = jsonData.getUsers();
                 this.schemas = jsonData.getSchemas();
+            } else {
+                throw new RuntimeException("Could not find resource file " + FILE_PATH);
             }
         } catch (IOException e) {
             throw new RuntimeException("Could not read data file", e);
@@ -55,12 +68,18 @@ public class UserAndSchemaService {
         return users.stream().filter(user -> user.getUsername().equals(username)).findFirst();
     }
 
+    public Set<Users> getUsers() {
+        return users.stream().collect(Collectors.toSet());
+    }
+
     public Optional<Users> authenticate(String username, String password) {
         return users.stream().filter(user -> user.getUsername().equals(username) && user.getPassword().equals(password)).findFirst();
     }
 
     public Users addUser(Users user) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         user.setId((long) (users.size() + 1));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         users.add(user);
         saveData();
         return user;
