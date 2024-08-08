@@ -2,12 +2,21 @@
   "users" : [ {
     "id" : 1,
     "username" : "user1",
-    "password" : "password1",
-    "schemas" : [ 1 ]
+    "password" : "$2a$10$EkHlY8pFxSXoR/P82oK7CuA.9i9JUx1EdYelzomWkiTwAdTb4H6qu",
+    "schemas" : [ 1, 2 ]
+  }, {
+    "id" : 2,
+    "username" : "user2",
+    "password" : "$2a$10$T0hMuBsna5I4EDdOFM8PQOCZ9J4AmyeAwZqiUcCq.SFMGo71dhfWe",
+    "schemas" : [ 3 ]
   } ],
   "schemas" : [ {
     "id" : 1,
-    "schemaName" : "jobschema",
+    "schemaName" : "studentSchema",
+    "schemaBody" : "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Generated schema for Root\",\"type\":\"object\",\"properties\":{\"students\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"number\"},\"name\":{\"type\":\"string\"},\"email\":{\"type\":\"string\"},\"courses\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"id\",\"name\",\"email\",\"courses\"]}}},\"required\":[\"students\"]}"
+  }, {
+    "id" : 2,
+    "schemaName" : "jobSchema",
     "schemaBody" : "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Generated schema for Root\",\"type\":\"object\",\"properties\":{\"job\":{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"meal tickets\":{\"type\":\"number\"},\"remote_job\":{\"type\":\"boolean\"},\"attributions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"title\",\"description\",\"meal tickets\",\"remote_job\",\"attributions\"]},\"candidate_requirements\":{\"type\":\"object\",\"properties\":{\"langueage\":{\"type\":\"string\"},\"bachelor's degree\":{\"type\":\"string\"},\"technologies\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"Knowledge Continuous integration\":{\"type\":\"boolean\"},\"Knowledge of Web technologies\":{\"type\":\"boolean\"},\"Operating systems\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"required\":[\"langueage\",\"bachelor's degree\",\"technologies\",\"Knowledge Continuous integration\",\"Knowledge of Web technologies\",\"Operating systems\"]}},\"required\":[\"job\",\"candidate_requirements\"]}"
   } ]
 }
